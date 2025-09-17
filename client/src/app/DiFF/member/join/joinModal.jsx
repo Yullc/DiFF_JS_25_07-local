@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signUp } from '@/lib/UserAPI';
-
+import {useDialog} from "@/common/commonLayout";
 export default function JoinForm() {
     const [form, setForm] = useState({
         email: '',
@@ -14,7 +14,7 @@ export default function JoinForm() {
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const router = useRouter();
-
+    const { alert } = useDialog();
     const onChange = (e) => setForm(v => ({ ...v, [e.target.name]: e.target.value }));
 
     const validate = () => {
@@ -36,20 +36,32 @@ export default function JoinForm() {
             const { loginPw, checkLoginPw, nickName, email } = form;
             const res = await signUp({ loginPw, checkLoginPw, nickName, email });
 
-            // 백엔드 응답 구조 맞추기
             const { resultCode, msg: serverMsg, data1: accessToken, data2: refreshToken } = res;
 
-            if (resultCode === 'S-1' && accessToken) {
-                // 토큰 저장 (자동 로그인 상태)
-                localStorage.setItem('tokenType', 'Bearer');
-                localStorage.setItem('accessToken', accessToken);
-                localStorage.setItem('refreshToken', refreshToken || '');
+            if (resultCode === 'S-1') {
+                alert({
+                    intent: "success",
+                    title: (
+                        <>
+                            {serverMsg
+                                ? serverMsg.split("\n").map((line, i) => (
+                                    <span key={i}>
+                            {line}
+                                        <br />
+                        </span>
+                                ))
+                                : "Your registration has been completed. Please verify your email address."}
+                        </>
+                    ),
+                });
 
-                // 전역 상태 갱신 이벤트 발생
-                window.dispatchEvent(new Event('auth-changed'));
-
-                // 메인 페이지로 강제 이동 (SSR 새로고침 보장)
-                window.location.href = '/DiFF/home/main';
+                if (accessToken) {
+                    localStorage.setItem('tokenType', 'Bearer');
+                    localStorage.setItem('accessToken', accessToken);
+                    localStorage.setItem('refreshToken', refreshToken || '');
+                    window.dispatchEvent(new Event('auth-changed'));
+                    window.location.href = '/DiFF/home/main';
+                }
             } else {
                 setError(serverMsg || 'Failed to join');
                 setSubmitting(false);
@@ -59,6 +71,7 @@ export default function JoinForm() {
             setSubmitting(false);
         }
     };
+
 
 
     return (

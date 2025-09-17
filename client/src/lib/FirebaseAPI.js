@@ -62,7 +62,7 @@ export async function saveFcmTokenToServer() {
     localStorage.setItem("fcmToken", token);
 
     const accessToken = localStorage.getItem("accessToken"); // JWT
-    const BACKEND = process.env.NEXT_PUBLIC_API_BASE;
+    const BACKEND = "https://api.diff.io.kr/api/DiFF";
 
     const res = await fetch(`${BACKEND}/member/saveFcmToken`, {
         method: "POST",

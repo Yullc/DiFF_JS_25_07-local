@@ -1,6 +1,6 @@
 // public/firebase-messaging-sw.js
-importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js");
-importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js");
+importScripts("https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js");
 
 firebase.initializeApp({
     apiKey: "AIzaSyBrTgvnzTDErEcUYajR9yX6h8As8F2tT2s",
@@ -14,7 +14,6 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-    console.log("📩 [SW] 백그라운드 알림 수신:", payload);
 
     const notificationTitle = payload.data?.title || "알림";
     const notificationOptions = {
@@ -24,4 +23,3 @@ messaging.onBackgroundMessage((payload) => {
 
     self.registration.showNotification(notificationTitle, notificationOptions);
 });
-a

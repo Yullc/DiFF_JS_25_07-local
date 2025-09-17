@@ -9,14 +9,11 @@ export const getGithubRepos = async () => {
 
 export const createRepository = async (data) => {
 
-    console.log("repo create 요청 : " + data);
 
     try {
         const res = await ArticleAPI.post("/repository/createRepository", data);
-        console.log("[API][createRepository] status:", res.status, "data:", res.data);
         return res.data;
     } catch (err) {
-        console.error("[API][createRepository] error:", err);
         throw err;
     }
 };
@@ -30,39 +27,30 @@ export const renameRepository = async (id, name) => {
             payload,
             { headers: { "Content-Type": "application/json" } }
         );
-        console.log("[API][renameRepository] status:", res.status, "data:", res.data);
         return res.data;
     } catch (err) {
         const msg = err?.response?.data ?? err.message;
-        console.error("[API][renameRepository] error:", msg);
         throw err;
     }
 };
 
 
 export const getAnalysisHistory = async (repoId) => {
-    console.log("[API] 요청 시작: /api/DiFF/repository/" + repoId + "/history");
     const res = await ArticleAPI.get(`/repository/${repoId}/history`);
-    console.log("[API] 응답:", res.data);
     return res.data?.data1 || [];
 };
 
 export const getAnalysisRecent = async (repoId) => {
-    console.log("[API] 요청 시작: /api/DiFF/repository/" + repoId + "/recent");
     const res = await ArticleAPI.get(`/repository/${repoId}/recent`);
-    console.log("[API] 응답:", res.data);
     return res.data?.data1 || [];
 };
 
 export const getLanguageDistribution = async (repoId) => {
     try {
-        console.log("[API] 요청 시작: /api/DiFF/repository/" + repoId + "/languages");
         const res = await ArticleAPI.get(`/repository/${repoId}/languages`);
-        console.log("[API] 응답:", res.data);
 
         return res.data?.data1 ?? [];
     } catch (err) {
-        console.error("[API] getLanguageDistribution error:", err);
         throw err;
     }
 };

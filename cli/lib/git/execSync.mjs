@@ -10,7 +10,7 @@ import {getResponse} from "../util/interaction.mjs";
 import {isUsableRepoName, mkRepo} from "../api/api.mjs";
 import {mkDiFFdirectory} from "../DiFF/init.mjs";
 import {getRepositoryId} from "../DiFF/draft.mjs";
-const BASE_URL = process.env.BACKEND_URL;
+const BASE_URL = "https://api.diff.io.kr/api/DiFF";
 let repoId = 0;
 
 /** git repository 여부 **/
@@ -26,8 +26,9 @@ export async function existsDiFF() {
 
 /** 브랜치 존재 여부 **/
 export async function branchExists(branch) {
-    let r = spawnSync('git', ['show-ref', '--verify', '--quiet', `refs/heads/${branch}`], { stdio: 'ignore' });
-    if (r.status === 0) return true;
+    const checkBranch =
+        execSync(`git show-ref --verify --quiet refs/heads/${branch} && echo "true" || echo "false"`).toString().trim();
+    return checkBranch === "true";
 }
 
 /** 요청 브랜치 마지막 체크섬 **/
@@ -39,6 +40,7 @@ export async function getLastChecksum(branch) {
 export async function DiFFinit(memberId, branch) {
 
     const q = await getResponse();
+    console.log(' Your repository isn\'t connected.');
 
     // repository 이름 입력, 중복 확인
     let repoName = await q.ask(' Please enter your new DiFF repository name: ');

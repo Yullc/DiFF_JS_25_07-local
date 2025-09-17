@@ -8,7 +8,7 @@ import axios from "axios";
 
 import {sendDiFF} from "../api/api.mjs";
 import {appendMeta} from "./init.mjs";
-const BASE_URL = process.env.BACKEND_URL;
+const BASE_URL = "https://api.diff.io.kr/api/DiFF";
 // mkDraft 함수
 export async function mkDraft(memberId, branch, draftId, diffId) {
 

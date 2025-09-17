@@ -447,7 +447,8 @@ function ArticleDetailInner() {
                                         const url = `${window.location.origin}/DiFF/article/detail?id=${article.id}`;
                                         const input = document.createElement("input");
                                         input.value = url;
-                                        document.body.appendChild(input);
+                                        // document.body.appendChild(input);
+                                        if (input.isConnected ) input.remove();
                                         input.select();
                                         document.execCommand("copy");
                                         document.body.removeChild(input);

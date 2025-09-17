@@ -5,11 +5,13 @@ import axios from "axios";
 const BACKEND = "http://localhost:8080/api/DiFF";
 
 /** axios custom **/
+/** axios custom **/
 export const UserAPI = axios.create({
     baseURL: BACKEND,
     headers: { "Content-Type": "application/json" },
 });
-console.log("🌍 BACKEND baseURL:", BACKEND);
+
+
 
 /** 요청 인터셉터: AccessToken 자동 첨부 */
 UserAPI.interceptors.request.use(
@@ -28,7 +30,6 @@ UserAPI.interceptors.request.use(
 const refreshAccessToken = async () => {
     const REFRESH_TOKEN = localStorage.getItem("refreshToken");
     if (!REFRESH_TOKEN) {
-        console.warn("❌ refreshToken 없음 → 다시 로그인 필요");
         return null;
     }
 
@@ -43,10 +44,8 @@ const refreshAccessToken = async () => {
         localStorage.setItem("accessToken", ACCESS_TOKEN);
         UserAPI.defaults.headers.Authorization = `${TOKEN_TYPE} ${ACCESS_TOKEN}`;
 
-        console.log("🔑 새 AccessToken 갱신:", ACCESS_TOKEN);
         return ACCESS_TOKEN;
     } catch (err) {
-        console.error("❌ 토큰 갱신 실패:", err.response?.data || err.message);
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         window.location.href = "/DiFF/member/login";
@@ -78,7 +77,6 @@ UserAPI.interceptors.response.use(
 
 // 로그인
 export const login = async ({ email, loginPw }) => {
-    console.log("📡 login 요청 URL:", UserAPI.defaults.baseURL + "/auth/login");
 
     const res = await UserAPI.post("/auth/login", { email, loginPw });
     const { accessToken, refreshToken } = res.data;
@@ -87,13 +85,11 @@ export const login = async ({ email, loginPw }) => {
     localStorage.setItem("refreshToken", refreshToken);
     localStorage.setItem("tokenType", "Bearer");
 
-    console.log("✅ 로그인 성공 → 토큰 저장 완료");
     return res.data;
 };
 
 // 회원가입
 export const signUp = async ({ loginPw, checkLoginPw, nickName, email }) => {
-    console.log("📡 signUp 요청 URL:", UserAPI.defaults.baseURL + "/auth/join");
 
     const res = await UserAPI.post("/auth/join", {
         loginPw,
@@ -107,7 +103,6 @@ export const signUp = async ({ loginPw, checkLoginPw, nickName, email }) => {
     localStorage.setItem("refreshToken", refreshToken);
     localStorage.setItem("tokenType", "Bearer");
 
-    console.log("✅ 회원가입 성공 → 토큰 저장 완료");
     return res.data;
 };
 
@@ -186,7 +181,7 @@ export const uploadProfileImg = async (file) => {
     formData.append("file", file);
 
     try {
-        const res = await axios.post(`/member/uploadProfileImg`, formData, {
+        const res = await UserAPI.post(`/member/uploadProfileImg`, formData, {
             headers: {
                 "Content-Type": "multipart/form-data",
                 Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -200,7 +195,6 @@ export const uploadProfileImg = async (file) => {
 };
 
 export const requestPasswordReset = async (email) => {
-    console.log("📩 [UserAPI.requestPasswordReset] 요청 값:", { email });
 
     return axios.post(`/member/findPw`, null, {
         params: { email },
@@ -208,7 +202,6 @@ export const requestPasswordReset = async (email) => {
 };
 
 export const updatePassword = async (token, newPw) => {
-    console.log("📩 [UserAPI.updatePassword] 요청 값:", { token, newPw });
 
     return axios.post(`/member/updatePassword`, null, {
         params: { token, newPw },

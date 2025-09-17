@@ -5,7 +5,7 @@ import chalk from "chalk";
 
 dotenv.config();
 
-const BASE_URL = process.env.BACKEND_URL;
+const BASE_URL = "https://api.diff.io.kr/api/DiFF"
 
 /** diff member check **/
 export async function verifyGitUser() {

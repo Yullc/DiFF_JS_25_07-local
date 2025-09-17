@@ -247,14 +247,14 @@ export default function Page() {
 
                 {/* Title */}
 
-                    <p className="text-[clamp(20px,1.6vw,24px)] font-bold text-blue-600 tracking-tight
+                <p className="text-[clamp(20px,1.6vw,24px)] font-bold text-blue-600 tracking-tight
                         flex items-center gap-3">
-                        <span className="hidden sm:inline-block w-5 h-5 rounded-full border-[6px] border-blue-600"/>
-                        TRENDING
-                    </p>
-                    <p className="text-neutral-700 truncate font-semibold">
-                        What the community is reading right now
-                    </p>
+                    <span className="hidden sm:inline-block w-5 h-5 rounded-full border-[6px] border-blue-600"/>
+                    TRENDING
+                </p>
+                <p className="text-neutral-700 truncate font-semibold">
+                    What the community is reading right now
+                </p>
 
                 <div className="article-slider h-2/3 w-full mt-8 flex relative">
                     <div className="flex absolute right-0 -top-16  font-extralight text-3xl text-neutral-500 z-10">
@@ -315,6 +315,7 @@ export default function Page() {
                                                     tabIndex={0}
                                                     onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && router.push(`/DiFF/article/detail?id=${article.id}`)}
                                                 >
+
                                                     {/* 썸네일 영역 (그라데이션 + 배지 + 메트릭) */}
                                                     <div className="relative h-1/2 w-full bg-neutral-100">
                                                         {imgSrc ? (

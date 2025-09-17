@@ -1,5 +1,5 @@
 // 사용자의 선택 배지 목록을 저장/조회하는 API 호출들
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://44.206.130.144:8080';
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://13.124.33.233:8080';
 
 function authHeaders() {
     const tokenType = (typeof window !== 'undefined' && localStorage.getItem('tokenType')) || 'Bearer';

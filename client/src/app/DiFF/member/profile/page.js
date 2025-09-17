@@ -194,7 +194,8 @@ function ProfileInner() {
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             data-testid="github"
-                                            className="inline-flex items-center justify-center w-12 h-12"
+                                            className="inline-flex items-center justify-center w-12 h-12
+                                            text-gray-400 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-100"
                                             aria-label="GitHub profile"
                                             title="GitHub profile"
                                         >
@@ -214,7 +215,8 @@ function ProfileInner() {
                                     {member.email && (
                                         <a
                                             href={`mailto:${member.email}`}
-                                            className="inline-flex items-center justify-center w-12 h-12 rounded-full"
+                                            className="inline-flex items-center justify-center w-12 h-12 rounded-full
+                                            text-gray-400 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-100"
                                             aria-label="이메일 보내기"
                                             title={member.email}
                                             data-testid="email"

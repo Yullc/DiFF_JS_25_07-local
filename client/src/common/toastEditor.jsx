@@ -4,7 +4,14 @@ import React, { useEffect, useRef } from "react";
 import Editor from "@toast-ui/editor";
 import "@toast-ui/editor/dist/toastui-editor.css";
 import "@toast-ui/editor/dist/theme/toastui-editor-dark.css";
-import "highlight.js/styles/atom-one-dark.css";
+
+// ▼ 코드 하이라이트(공식 플러그인: Prism 사용)
+import "prismjs/themes/prism.css";
+import "@toast-ui/editor-plugin-code-syntax-highlight/dist/toastui-editor-plugin-code-syntax-highlight.css";
+import Prism from "prismjs";
+import codeSyntaxHighlight from "@toast-ui/editor-plugin-code-syntax-highlight";
+
+import "highlight.js/styles/atom-one-dark.css"; // <- 스타일만 남겨도 무방하지만, DOM 변형은 절대 X
 import { useTheme } from "@/common/thema";
 
 // 이미지 업로드 (Cloudinary)
@@ -14,16 +21,19 @@ const handleUpload = async (file) => {
     data.append("upload_preset", "teamproject_Y");
     data.append("cloud_name", "dc12fahac");
 
-    const res = await fetch(
-        "https://api.cloudinary.com/v1_1/dc12fahac/image/upload",
-        { method: "POST", body: data }
-    );
+    const res = await fetch("https://api.cloudinary.com/v1_1/dc12fahac/image/upload", {
+        method: "POST",
+        body: data,
+    });
     const result = await res.json();
     return result.secure_url;
 };
 
-// 에디터 레이아웃 패치 CSS
 const STICKY_CSS = `
+[data-sticky-editor] .toastui-editor-tabs,
+[data-sticky-editor] .toastui-editor-mode-switch{
+  display:none !important; pointer-events:none !important; width:0 !important; height:0 !important; overflow:hidden !important;
+}
 [data-sticky-editor] .toastui-editor-defaultUI{
   height:100% !important; display:flex; flex-direction:column; border:0 !important;
 }
@@ -31,7 +41,7 @@ const STICKY_CSS = `
   position:sticky; top:0; z-index:40; background:inherit; flex:0 0 auto;
 }
 [data-sticky-editor] .toastui-editor-main{
-  flex:1 1 auto !important; min-height:0 !important; overflow:auto !important; /* ← 여기만 스크롤 */
+  flex:1 1 auto !important; min-height:0 !important; overflow:auto !important;
 }
 [data-sticky-editor] .toastui-editor-main-container{
   display:flex !important; height:100% !important; min-height:0 !important;
@@ -40,7 +50,6 @@ const STICKY_CSS = `
 [data-sticky-editor] .toastui-editor-preview.toastui-editor-vertical-style{
   flex:1 1 0% !important; min-width:0 !important; height:auto !important; min-height:100% !important;
 }
-/* 내부 세로 스크롤 제거 (클릭 영역 전체 확보) */
 [data-sticky-editor] .toastui-editor-md-container .CodeMirror{ height:auto !important; }
 [data-sticky-editor] .toastui-editor-md-container .CodeMirror-scroll{
   min-height:100% !important; overflow-y:hidden !important; overflow-x:auto !important;
@@ -48,22 +57,23 @@ const STICKY_CSS = `
 [data-sticky-editor] .toastui-editor-ww-container .ProseMirror{
   height:auto !important; min-height:100% !important; overflow:visible !important;
 }
-/* 탭/모드 스위치 완전 제거(혹시 생겨도) */
-[data-sticky-editor] .toastui-editor-tabs,
-[data-sticky-editor] .toastui-editor-mode-switch{
-  display:none !important; pointer-events:none !important; width:0 !important; height:0 !important; overflow:hidden !important;
-}
 `;
 
 export default function ToastEditor({ initialValue = "", onChange }) {
     const editorRef = useRef(null);
     const instanceRef = useRef(null);
+    const touchedRef = useRef(false);
+    const hydratedRef = useRef(false);
     const theme = useTheme();
 
     useEffect(() => {
         if (!editorRef.current) return;
 
+        // 번역으로 인한 DOM 변형 방지
         editorRef.current.setAttribute("data-sticky-editor", "1");
+        editorRef.current.classList.add("notranslate");
+        editorRef.current.setAttribute("translate", "no");
+
         if (!document.getElementById("toast-sticky-css")) {
             const s = document.createElement("style");
             s.id = "toast-sticky-css";
@@ -71,73 +81,70 @@ export default function ToastEditor({ initialValue = "", onChange }) {
             document.head.appendChild(s);
         }
 
-        editorRef.current.textContent = "";
-        editorRef.current.innerHTML = "";
+        // ❗️여기서 innerHTML/textContent로 비우지 마세요 (DOM mismatch 위험)
+        // editorRef.current.textContent = "";
+        // editorRef.current.innerHTML = "";
 
-        const initEditor = async () => {
-            const highlightJs = (await import("highlight.js")).default;
+        instanceRef.current = new Editor({
+            el: editorRef.current,
+            height: "100%",
+            initialEditType: "markdown",
+            previewStyle: "vertical",
+            hideModeSwitch: true,
+            usageStatistics: false,
+            initialValue: typeof initialValue === "string" ? initialValue : "",
+            theme,
+            codeBlockLanguages: ["javascript", "java", "python", "bash", "sql", "json"],
+            plugins: [[codeSyntaxHighlight, { highlighter: Prism }]], // ★ 공식 플러그인
+        });
 
-            instanceRef.current = new Editor({
-                el: editorRef.current,
-                height: "100%",
-                initialEditType: "markdown",
-                previewStyle: "vertical",
-                hideModeSwitch: true,
-                usageStatistics: false,
-                initialValue: typeof initialValue === "string" ? initialValue : "",
-                theme: theme,
-                codeBlockLanguages: ["javascript", "java", "python", "bash", "sql", "json"],
-            });
-
-            if (!initialValue) {
+        if (!initialValue) {
+            // 초기 “Write / Preview” 잔여 텍스트 제거 (에디터 API만 사용)
+            Promise.resolve().then(() => {
+                if (!instanceRef.current || touchedRef.current) return;
                 const md0 = (instanceRef.current.getMarkdown() || "").trim();
-                if (/^(write\s*\n\s*preview|preview\s*\n\s*write)$/i.test(md0)) {
-                    instanceRef.current.setMarkdown("");
+                if (!md0 || /^(write\s*\n\s*preview|preview\s*\n\s*write)$/i.test(md0)) {
+                    instanceRef.current.setMarkdown("", false);
                 }
+            });
+        }
+
+        instanceRef.current.on("change", () => {
+            touchedRef.current = true;
+            onChange?.(instanceRef.current.getMarkdown());
+        });
+
+        instanceRef.current.addHook("addImageBlobHook", async (blob, callback) => {
+            try {
+                const url = await handleUpload(blob);
+                // 권장: callback으로 삽입 (모드별 안전)
+                callback(url, blob?.name ?? "image");
+            } catch (e) {
+                console.error("이미지 업로드 실패:", e);
             }
+        });
 
-            const killTabs = () => {
-                editorRef.current
-                    ?.querySelectorAll(".toastui-editor-tabs, .toastui-editor-mode-switch")
-                    ?.forEach((el) => el.remove());
-            };
-            killTabs();
-            requestAnimationFrame(killTabs);
-            setTimeout(killTabs, 0);
-            setTimeout(killTabs, 100);
-
-            const applyHL = () => {
-                editorRef.current?.querySelectorAll("pre code")?.forEach((block) => {
-                    highlightJs.highlightElement(block);
-                });
-            };
-            applyHL();
-            instanceRef.current.on("change", () => {
-                onChange?.(instanceRef.current.getMarkdown());
-                applyHL();
-            });
-
-            instanceRef.current.addHook("addImageBlobHook", async (blob) => {
-                try {
-                    const url = await handleUpload(blob);
-                    instanceRef.current.insertText(`![image](${url})`);
-                } catch (e) {
-                    console.error("이미지 업로드 실패:", e);
-                }
-            });
+        return () => {
+            try {
+                instanceRef.current?.destroy();
+            } catch (e) {
+                console.warn("ToastEditor destroy skipped:", e);
+            } finally {
+                instanceRef.current = null;
+            }
         };
-
-        initEditor();
-
-        return () => instanceRef.current?.destroy();
-    }, []); // mount only
+    }, []); // 초기 1회
 
     useEffect(() => {
         if (!instanceRef.current) return;
-        if (typeof initialValue !== "string") return;
-        const curr = instanceRef.current.getMarkdown();
-        if (initialValue && initialValue !== curr) {
+        if (hydratedRef.current) return;
+        if (!initialValue) return;
+        if (touchedRef.current) return;
+
+        const curr = instanceRef.current.getMarkdown() || "";
+        if (!curr.trim()) {
             instanceRef.current.setMarkdown(initialValue, false);
+            hydratedRef.current = true;
         }
     }, [initialValue]);
 

@@ -1,8 +1,8 @@
 // src/lib/bff.js
-const ORIGIN = process.env.BACKEND_ORIGIN;
+const BACKEND = "https://api.diff.io.kr/api/DiFF";
 
-if (!ORIGIN) {
-    console.warn("⚠️ BACKEND_ORIGIN 환경변수가 설정되지 않았습니다. 기본값을 사용하세요.");
+if (!BACKEND) {
+    console.warn("⚠️ BACKEND 환경변수가 설정되지 않았습니다. 기본값을 사용하세요.");
 }
 
 // 브라우저에서 토큰 가져오기 (cookie > localStorage)
@@ -44,7 +44,7 @@ export async function bff(path, opts = {}) {
 
         if (bearer && !h.has('authorization')) h.set('authorization', bearer);
 
-        return fetch(`${ORIGIN}${apiPath}`, {
+        return fetch(`${BACKEND}${apiPath}`, {
             ...opts,
             headers: h,
             cache: 'no-store',

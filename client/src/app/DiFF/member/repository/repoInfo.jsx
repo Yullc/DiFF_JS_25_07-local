@@ -9,6 +9,7 @@ import AnalysisRecentChart from "@/app/DiFF/member/repository/analysisRecentChar
 import {
     connectRepository,
     getAnalysisHistory,
+    getAnalysisRecent,
     getLanguageDistribution,
     renameRepository,
     deleteRepository,
@@ -422,9 +423,9 @@ export function RepoInfo({
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     title={repo?.name}
-                                    className="shrink-0"
+                                    className="shrink-0 text-gray-400 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors duration-100"
                                 >
-                                    &nbsp;&nbsp;&nbsp;<i className="fa-brands fa-github text-2xl"></i>
+                                    &nbsp;&nbsp;&nbsp;<i className="fa-brands fa-github text-2xl "></i>
                                 </a>
                             )}
                         </div>

@@ -266,7 +266,8 @@ export function WriteArticlePage() {
             const res = await writeArticle(data);
             if (res?.resultCode?.startsWith('S-')) {
                 const articleId = res.data1;
-                router.push(`/DiFF/article/detail?id=${articleId}`);
+                // router.push(`/DiFF/article/detail?id=${articleId}`);
+                setTimeout(() => router.push(`/DiFF/article/detail?id=${articleId}`), 0);
             } else {
                 setError(res?.msg || 'Failed to write');
             }

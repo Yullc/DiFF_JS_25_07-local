@@ -8,8 +8,10 @@ import dynamic from "next/dynamic";
 
 import clsx from "clsx";
 import {useDialog} from "@/common/commonLayout";
-import {useTheme} from "@/common/thema";
 import { Globe, Lock } from "lucide-react";
+
+// 🔑 컴포넌트 밖(모듈 최상단)에서 dynamic 선언 (재마운트 방지)
+const ToastEditor = dynamic(() => import("@/common/toastEditor"), { ssr: false });
 
 export default function ModifyArticlePage() {
     return (
@@ -24,7 +26,7 @@ function ModifyArticlePageInner() {
     const { alert } = useDialog();
     const searchParams = useSearchParams();
     const id = searchParams.get("id");
-    const ToastEditor = dynamic(() => import("@/common/toastEditor"), { ssr: false });
+
     const [article, setArticle] = useState(null);
     const [title, setTitle] = useState('');
     const [body, setBody] = useState('');
@@ -32,10 +34,7 @@ function ModifyArticlePageInner() {
     const [loading, setLoading] = useState(true);
     const [errMsg, setErrMsg] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const [alertOpen, setAlertOpen] = useState(false);
-    const [alertCfg, setAlertCfg] = useState({});
-
-    const bg = useTheme() === 'dark' ? '#111214' : '#ffffff';
+    const [unmountEditor, setUnmountEditor] = useState(false);
 
     // Load & permission check
     useEffect(() => {
@@ -44,7 +43,7 @@ function ModifyArticlePageInner() {
             try {
                 const art = await getArticle(id);
                 if (!art?.userCanModify) {
-                    alert({ intent: "danger", title: "You do not have permission to edit this article." });
+                    await alert({ intent: "danger", title: "You do not have permission to edit this article." });
                     router.replace(`/DiFF/article/detail?id=${id}`);
                     return;
                 }
@@ -55,10 +54,10 @@ function ModifyArticlePageInner() {
             } catch (e) {
                 const status = e?.response?.status;
                 if (status === 401) {
-                    alert({ intent: "danger", title: "You need to sign in." });
+                    await alert({ intent: "danger", title: "You need to sign in." });
                     router.replace('/DiFF/member/login');
                 } else if (status === 403) {
-                    alert({ intent: "danger", title: "You do not have permission to edit this article." });
+                    await alert({ intent: "danger", title: "You do not have permission to edit this article." });
                     router.replace(`/DiFF/article/detail?id=${id}`);
                 } else {
                     console.error('[ModifyArticle] load error:', e);
@@ -68,28 +67,28 @@ function ModifyArticlePageInner() {
                 setLoading(false);
             }
         })();
-    }, [id, router]);
+    }, [id, router, alert]);
 
     // Submit update
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             if (!id) {
-                alert({ intent: "danger", title: "Invalid access. Retry again." });
+                await alert({ intent: "danger", title: "Invalid access. Retry again." });
                 return;
             }
             const token = localStorage.getItem('accessToken');
             if (!token) {
-                alert({ intent: "danger", title: "You need to sign in." });
+                await alert({ intent: "danger", title: "You need to sign in." });
                 router.replace('/DiFF/member/login');
                 return;
             }
             if (!title.trim()) {
-                alert({ intent: "warning", title: "Please enter title." });
+                await alert({ intent: "warning", title: "Please enter title." });
                 return;
             }
             if (!body.trim()) {
-                alert({ intent: "warning", title: "Please enter content." });
+                await alert({ intent: "warning", title: "Please enter content." });
                 return;
             }
 
@@ -104,11 +103,14 @@ function ModifyArticlePageInner() {
             };
 
             await modifyArticle(modifiedArticle, token);
-            alert({ intent: "success", title: "Updated successfully." });
-            router.push(`/DiFF/article/detail?id=${id}`);
+            await alert({ intent: "success", title: "Updated successfully." });
+
+            // 에디터 먼저 언마운트 → 다음 틱에 라우팅 (removeChild 충돌 방지)
+            setUnmountEditor(true);
+            setTimeout(() => router.push(`/DiFF/article/detail?id=${id}`), 0);
         } catch (e) {
             console.error('❌ Update failed:', e);
-            alert({ intent: "danger", title: "Failed to update. Please try again." });
+            await alert({ intent: "danger", title: "Failed to update. Please try again." });
         } finally {
             setSubmitting(false);
         }
@@ -131,14 +133,13 @@ function ModifyArticlePageInner() {
 
             <form id="modify-form" onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0" aria-live="polite">
 
-                <div
-                    className={clsx(
-                        "sticky inset-x-0 top-0 z-40 border-b",
-                        "border-neutral-200 dark:border-neutral-700",
-                        "p-3",
-                        "bg-white dark:bg-neutral-900"
-                    )}
-                >
+                <div className={clsx(
+                    "sticky inset-x-0 top-0 z-40 border-b",
+                    "border-neutral-200 dark:border-neutral-700",
+                    "p-3",
+                    "bg-white dark:bg-neutral-900"
+                )}>
+
                     {/* Title */}
                     <div className="flex-1">
                         <input
@@ -149,7 +150,7 @@ function ModifyArticlePageInner() {
                         />
                     </div>
 
-                        {/* Visibility */}
+                    {/* Visibility */}
                     <div className="flex items-center gap-2 mx-5">
                         <button
                             type="button"
@@ -159,19 +160,7 @@ function ModifyArticlePageInner() {
                             title={isPublic ? 'Public' : 'Private'}
                             className="inline-flex items-center justify-center gap-2 rounded-full border w-24 py-1.5 text-sm transition border-neutral-200 bg-white text-neutral-700 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:focus-visible:ring-neutral-600"
                         >
-                            {isPublic ? (
-                                // Globe icon for Public
-                                <Globe
-                                className={`w-4 h-4`}
-                                strokeWidth={2}
-                                />
-                            ) : (
-                                // Lock icon for Private
-                                <Lock
-                                    className={`w-4 h-4`}
-                                    strokeWidth={2}
-                                />
-                            )}
+                            {isPublic ? <Globe className="w-4 h-4" strokeWidth={2} /> : <Lock className="w-4 h-4" strokeWidth={2} />}
                             <span>{isPublic ? 'Public' : 'Private'}</span>
                         </button>
                     </div>
@@ -185,7 +174,10 @@ function ModifyArticlePageInner() {
 
                 <div className="flex-1 overflow-auto">
                     <div className="h-full w-full">
-                        <ToastEditor key={id} initialValue={body} onChange={setBody} height="100%" />
+                        {/* ✅ 글 로딩이 끝난 뒤에만 에디터 렌더 (기존 내용 보존) */}
+                        {!unmountEditor && !loading && article && (
+                            <ToastEditor key={id} initialValue={body} onChange={setBody} />
+                        )}
                     </div>
                 </div>
 
@@ -208,65 +200,6 @@ function ModifyArticlePageInner() {
                     </div>
                 </div>
             </form>
-
-            <style jsx global>{`
-                /* ---- Frame: editor full height + sticky toolbar ---- */
-                .toastui-editor-defaultUI {
-                    height: 100% !important;
-                    display: flex;
-                    flex-direction: column;
-                    border: 0 !important;
-                }
-                .toastui-editor-toolbar {
-                    position: sticky;
-                    top: 0;
-                    z-index: 30;
-                    flex: 0 0 auto;
-                    background: inherit;
-                }
-
-                /* ---- Main takes the scroll (ONLY here) ---- */
-                .toastui-editor-main {
-                    flex: 1 1 auto !important;
-                    min-height: 0 !important;
-                    overflow: auto !important;   /* ← 여기만 스크롤 */
-                }
-
-                /* 메인 내부 컨테이너/패널이 메인 높이를 정확히 채우도록 */
-                .toastui-editor-main-container {
-                    display: flex !important;
-                    height: 100% !important;
-                    min-height: 0 !important;
-                }
-                .toastui-editor-md-container.toastui-editor-md-vertical-style,
-                .toastui-editor-preview.toastui-editor-vertical-style {
-                    flex: 1 1 0% !important;
-                    height: 100% !important;
-                    min-height: 0 !important;
-                }
-
-                /* ---- Markdown pane: CodeMirror는 'auto-height', 내부 스크롤 제거 ---- */
-                .toastui-editor-md-container .CodeMirror {
-                    height: auto !important;              /* 내용 길이에 맞춰 늘어남 */
-                }
-                .toastui-editor-md-container .CodeMirror-scroll {
-                    overflow-y: hidden !important;        /* 내부 스크롤 금지 (수직) */
-                    overflow-x: auto !important;          /* 수평 스크롤만 허용 */
-                    min-height: 100% !important;          /* 클릭 영역이 패널 높이만큼 확보 */
-                }
-
-                /* ---- WYSIWYG pane도 내부 스크롤 제거 ---- */
-                .toastui-editor-ww-container .ProseMirror {
-                    height: auto !important;
-                    min-height: 100% !important;
-                    overflow: visible !important;
-                }
-
-                /* 탭(Write/Preview) 숨김 */
-                .toastui-editor-defaultUI .toastui-editor-tabs {
-                    display: none !important;
-                }
-            `}</style>
         </div>
     );
 }

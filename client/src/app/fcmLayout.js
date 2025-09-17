@@ -12,11 +12,10 @@ export default function RootLayout({ children }) {
 
         // 서비스워커 등록
         if ("serviceWorker" in navigator) {
-            navigator.serviceWorker
-                .register("/firebase-messaging-sw.js")
-                .then((reg) => console.log("✅ 서비스워커 등록 성공:", reg))
-                .catch((err) => console.error("❌ 서비스워커 등록 실패:", err));
+            navigator.serviceWorker.register("/firebase-messaging-sw.js").catch(() => {
+            });
         }
+
     }, []);
 
     return (

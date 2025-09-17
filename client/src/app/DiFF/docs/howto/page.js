@@ -14,7 +14,7 @@ export default function howToPage() {
 
 <br>
 
-## 2-1. TL;DR
+## 2-1. 요약
 
 - **UI는 단일 커밋**, **CLI는 커밋 범위**(이전 초안 요청 커밋 이후 ~ 지정 지점)를 다룬다.  
 - 같은 대상을 고르면 **UI/CLI 결과는 동일**하다.  

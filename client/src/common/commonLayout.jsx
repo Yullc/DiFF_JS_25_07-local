@@ -134,7 +134,7 @@ export default function CommonLayout({children, modal, pageTitle = 'DiFF'}) {
 
     return (
         <DialogContext.Provider value={{alert, confirm}}>
-            <div className="text-neutral-600">
+            <div className="text-neutral-600 scrollbar-none">
                 {useDarkColor && <div className="fixed inset-0 -z-10 dark:bg-neutral-900"/>}
                 <Header/>
                 <div

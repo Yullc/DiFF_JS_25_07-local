@@ -41,7 +41,18 @@ export default function JoinForm() {
             if (resultCode === 'S-1') {
                 alert({
                     intent: "success",
-                    title: serverMsg || "Your registration has been completed. Please verify your email address.",
+                    title: (
+                        <>
+                            {serverMsg
+                                ? serverMsg.split("\n").map((line, i) => (
+                                    <span key={i}>
+                            {line}
+                                        <br />
+                        </span>
+                                ))
+                                : "Your registration has been completed. Please verify your email address."}
+                        </>
+                    ),
                 });
 
                 if (accessToken) {

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 /** EC2 배포 서버 주소 */
-const BACKEND = "https://api.diff.io.kr/api/DiFF";
+const BACKEND = "http://localhost:8080/api/DiFF";
 
 /** axios custom **/
 export const NotionAPI = axios.create({

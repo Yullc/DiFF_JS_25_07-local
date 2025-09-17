@@ -5,7 +5,7 @@ import { UserAPI } from "@/lib/UserAPI";
 import {ReflectAdapter as RepositoryAPI} from "next/dist/server/web/spec-extension/adapters/reflect";
 
 /** EC2 배포 서버 주소 (api/DiFF 까지 포함) */
-const BACKEND = "https://api.diff.io.kr/api/DiFF";
+const BACKEND = "http://localhost:8080/api/DiFF";
 
 /** axios custom **/
 export const ArticleAPI = axios.create({

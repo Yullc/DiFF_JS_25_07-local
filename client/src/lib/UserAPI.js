@@ -5,7 +5,6 @@ import axios from "axios";
 const BACKEND = "http://localhost:8080/api/DiFF";
 
 /** axios custom **/
-/** axios custom **/
 export const UserAPI = axios.create({
     baseURL: BACKEND,
     headers: { "Content-Type": "application/json" },
